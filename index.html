@@ -104,8 +104,8 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
     <div class="stats" id="stats-grid">
       <div class="stat"><div class="stat-label">Total</div><div class="stat-value red">—</div></div>
       <div class="stat"><div class="stat-label">Gastos</div><div class="stat-value blue">—</div></div>
-      <div class="stat"><div class="stat-label">Usuario 1</div><div class="stat-value red">—</div></div>
-      <div class="stat"><div class="stat-label">Usuario 2</div><div class="stat-value red">—</div></div>
+      <div class="stat"><div class="stat-label">Aldemar</div><div class="stat-value red">—</div></div>
+      <div class="stat"><div class="stat-label">Yasmin</div><div class="stat-value red">—</div></div>
     </div>
     <div class="card">
       <div class="card-title">Por categoría</div>
@@ -127,8 +127,8 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
       <div class="field">
         <label>Usuario</label>
         <div class="user-toggle">
-          <button class="u-btn active" id="u1-btn" onclick="selectUser('U1')">👤 Usuario 1</button>
-          <button class="u-btn" id="u2-btn" onclick="selectUser('U2')">👤 Usuario 2</button>
+          <button class="u-btn active" id="u1-btn" onclick="selectUser('U1')">👤 Aldemar</button>
+          <button class="u-btn" id="u2-btn" onclick="selectUser('U2')">👤 Yasmin</button>
         </div>
       </div>
       <div class="field">
@@ -175,8 +175,8 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
       </select>
       <select id="filter-user" onchange="renderList()" style="flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;background:#fff">
         <option value="">Ambos</option>
-        <option value="U1">Usuario 1</option>
-        <option value="U2">Usuario 2</option>
+        <option value="U1">Aldemar</option>
+        <option value="U2">Yasmin</option>
       </select>
     </div>
     <div id="expense-list"><div class="loading">Cargando...</div></div>
@@ -394,7 +394,7 @@ function renderList(){
       </div>
       <div class="exp-right">
         <div class="exp-amount">${fmt(e.amount)}</div>
-        <div class="exp-user">${e.user==='U1'?'Usuario 1':'Usuario 2'}</div>
+        <div class="exp-user">${e.user==='U1'?'Aldemar':'Yasmin'}</div>
       </div>
       <button class="del-btn" onclick="deleteExpense('${id}')" aria-label="Eliminar"><i class="ti ti-trash"></i></button>
     </div>`).join('')+'</div>';
@@ -426,8 +426,8 @@ function renderDashboard(){
   document.getElementById('stats-grid').innerHTML=`
     <div class="stat"><div class="stat-label">Total periodo</div><div class="stat-value red">${fmt(total)}</div></div>
     <div class="stat"><div class="stat-label">N° gastos</div><div class="stat-value blue">${exps.length}</div></div>
-    <div class="stat"><div class="stat-label">Usuario 1</div><div class="stat-value red">${fmt(u1)}</div></div>
-    <div class="stat"><div class="stat-label">Usuario 2</div><div class="stat-value red">${fmt(u2)}</div></div>`;
+    <div class="stat"><div class="stat-label">Aldemar</div><div class="stat-value red">${fmt(u1)}</div></div>
+    <div class="stat"><div class="stat-label">Yasmin</div><div class="stat-value red">${fmt(u2)}</div></div>`;
 
   const cats={};
   exps.forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amount});
@@ -472,7 +472,7 @@ window.exportCSV = function(){
     const p=periods[e.period]||{};
     rows.push([
       p.name||'?', p.start||'', p.end||'',
-      e.user==='U1'?'Usuario 1':'Usuario 2',
+      e.user==='U1'?'Aldemar':'Yasmin',
       e.date,
       e.cat.replace(/\p{Emoji}/gu,'').trim(),
       e.desc,
