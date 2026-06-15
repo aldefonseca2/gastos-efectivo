@@ -23,11 +23,20 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
 .content{flex:1;padding:14px 14px 80px}
 .card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:14px 16px;margin-bottom:12px}
 .card-title{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:12px}
+.saldo-card{border-radius:14px;padding:16px 18px;margin-bottom:14px;background:linear-gradient(135deg,#1a6db5,#378ADD)}
+.saldo-label{font-size:12px;color:rgba(255,255,255,.75);margin-bottom:4px}
+.saldo-value{font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.5px}
+.saldo-value.negative{color:#ffb3b3}
+.saldo-row{display:flex;gap:10px;margin-top:10px}
+.saldo-mini{flex:1;background:rgba(255,255,255,.15);border-radius:9px;padding:8px 10px}
+.saldo-mini-label{font-size:10px;color:rgba(255,255,255,.7);margin-bottom:2px}
+.saldo-mini-value{font-size:13px;font-weight:600;color:#fff}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 .stat{background:#f8f8f8;border-radius:10px;padding:10px 12px}
 .stat-label{font-size:11px;color:#888;margin-bottom:3px}
-.stat-value{font-size:19px;font-weight:600}
+.stat-value{font-size:16px;font-weight:600}
 .stat-value.red{color:#E24B4A}
+.stat-value.green{color:#1D9E75}
 .stat-value.blue{color:#378ADD}
 .field{margin-bottom:10px}
 .field label{font-size:12px;color:#666;display:block;margin-bottom:4px;font-weight:500}
@@ -36,6 +45,12 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
 .user-toggle{display:flex;gap:8px}
 .u-btn{flex:1;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;background:#f8f8f8;color:#666;transition:all .15s}
 .u-btn.active{background:#E6F1FB;color:#185FA5;border-color:#378ADD}
+.type-toggle{display:flex;gap:8px;margin-bottom:10px}
+.t-btn{flex:1;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.t-btn.gasto{background:#fff0f0;color:#c0392b;border-color:#f5c6c6}
+.t-btn.gasto.active{background:#E24B4A;color:#fff;border-color:#E24B4A}
+.t-btn.ingreso{background:#f0faf5;color:#1D9E75;border-color:#b2dfcc}
+.t-btn.ingreso.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
 .btn-primary{width:100%;padding:11px;background:#378ADD;color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
 .btn-primary:active{opacity:.85}
 .btn-secondary{width:100%;padding:10px;background:#f8f8f8;color:#1a1a1a;border:1px solid #ddd;border-radius:9px;font-size:14px;font-weight:500;cursor:pointer;margin-top:8px}
@@ -46,7 +61,9 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
 .exp-desc{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .exp-meta{font-size:11px;color:#888;margin-top:1px}
 .exp-right{text-align:right;flex-shrink:0}
-.exp-amount{font-size:13px;font-weight:600;color:#E24B4A}
+.exp-amount{font-size:13px;font-weight:600}
+.exp-amount.gasto{color:#E24B4A}
+.exp-amount.ingreso{color:#1D9E75}
 .exp-user{font-size:10px;color:#888;margin-top:1px}
 .del-btn{background:none;border:none;cursor:pointer;color:#ccc;padding:4px;margin-left:2px;font-size:16px}
 .del-btn:active{color:#E24B4A}
@@ -70,6 +87,12 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
 .loading{text-align:center;padding:2rem;color:#aaa;font-size:13px}
 .section-tab{display:none}
 .section-tab.active{display:block}
+.saldo-edit{display:flex;gap:8px;align-items:center}
+.saldo-edit input{flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+.saldo-edit button{padding:8px 14px;background:#378ADD;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.type-badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600;margin-left:4px}
+.type-badge.ingreso{background:#e6f7f0;color:#1D9E75}
+.type-badge.saldo{background:#E6F1FB;color:#185FA5}
 </style>
 </head>
 <body>
@@ -89,7 +112,7 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
       <i class="ti ti-plus"></i>Agregar
     </button>
     <button class="tab" onclick="showTab('list')" id="tab-btn-list">
-      <i class="ti ti-list"></i>Gastos
+      <i class="ti ti-list"></i>Movimientos
     </button>
     <button class="tab" onclick="showTab('periods')" id="tab-btn-periods">
       <i class="ti ti-calendar"></i>Periodos
@@ -101,18 +124,14 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
   <!-- DASHBOARD -->
   <div class="content section-tab active" id="tab-dashboard">
     <div id="period-selector-dash"></div>
-    <div class="stats" id="stats-grid">
-      <div class="stat"><div class="stat-label">Total</div><div class="stat-value red">—</div></div>
-      <div class="stat"><div class="stat-label">Gastos</div><div class="stat-value blue">—</div></div>
-      <div class="stat"><div class="stat-label">Aldemar</div><div class="stat-value red">—</div></div>
-      <div class="stat"><div class="stat-label">Yasmin</div><div class="stat-value red">—</div></div>
-    </div>
+    <div id="saldo-card-dash"></div>
+    <div class="stats" id="stats-grid"></div>
     <div class="card">
       <div class="card-title">Por categoría</div>
       <div id="cat-summary"><div class="loading">Cargando...</div></div>
     </div>
     <div class="card">
-      <div class="card-title">Últimos gastos</div>
+      <div class="card-title">Últimos movimientos</div>
       <div id="recent-list"><div class="loading">Cargando...</div></div>
     </div>
     <button class="btn-secondary" onclick="exportCSV()">
@@ -123,7 +142,14 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
   <!-- AGREGAR -->
   <div class="content section-tab" id="tab-add">
     <div class="card">
-      <div class="card-title">Nuevo gasto</div>
+      <div class="card-title">Nuevo movimiento</div>
+      <div class="field">
+        <label>Tipo</label>
+        <div class="type-toggle">
+          <button class="t-btn gasto active" id="type-gasto" onclick="selectType('gasto')">↑ Gasto</button>
+          <button class="t-btn ingreso" id="type-ingreso" onclick="selectType('ingreso')">↓ Ingreso</button>
+        </div>
+      </div>
       <div class="field">
         <label>Usuario</label>
         <div class="user-toggle">
@@ -135,18 +161,19 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
         <label>Periodo</label>
         <select id="exp-period"><option value="">— sin periodos —</option></select>
       </div>
-      <div class="field">
+      <div id="cat-field" class="field">
         <label>Categoría</label>
         <select id="exp-cat">
-          <option>🛒 Mercado</option>
-          <option>🍽️ Comida</option>
-          <option>🚌 Transporte</option>
-          <option>💊 Salud</option>
-          <option>🏠 Hogar</option>
-          <option>👗 Ropa</option>
-          <option>🎉 Ocio</option>
-          <option>📱 Servicios</option>
-          <option>📦 Otros</option>
+          <option>🛒 Mercado y carnes</option>
+          <option>🧹 Productos hogar</option>
+          <option>🔧 Mantenimiento Locativo</option>
+          <option>🧽 Servicio Aseo</option>
+          <option>🔒 Vigilancia</option>
+          <option>❄️ Refri ofrenda</option>
+          <option>💼 Gastos AFV</option>
+          <option>👜 Gastos Yas</option>
+          <option>💊 Farmacia, médico, odontología</option>
+          <option>📦 Gastos Varios</option>
         </select>
       </div>
       <div class="field">
@@ -162,7 +189,7 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
         <input type="date" id="exp-date">
       </div>
       <button class="btn-primary" onclick="addExpense()">
-        <i class="ti ti-check" style="font-size:15px;vertical-align:-2px;margin-right:4px"></i>Registrar gasto
+        <i class="ti ti-check" style="font-size:15px;vertical-align:-2px;margin-right:4px"></i>Registrar
       </button>
     </div>
   </div>
@@ -198,6 +225,10 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
         <label>Fecha fin (opcional)</label>
         <input type="date" id="period-end">
       </div>
+      <div class="field">
+        <label>Saldo inicial en efectivo ($)</label>
+        <input type="number" id="period-saldo" placeholder="0" min="0" inputmode="numeric">
+      </div>
       <button class="btn-primary" onclick="createPeriod()">Crear periodo</button>
     </div>
     <div id="periods-list"><div class="loading">Cargando...</div></div>
@@ -225,47 +256,40 @@ let periods = {};
 let expenses = {};
 let activePeriod = null;
 let addUser = 'U1';
+let addType = 'gasto';
 
 const COLORS = {
-  '🛒 Mercado':'#B5D4F4','🍽️ Comida':'#9FE1CB','🚌 Transporte':'#FAC775',
-  '💊 Salud':'#F5C4B3','🏠 Hogar':'#C0DD97','👗 Ropa':'#F4C0D1',
-  '🎉 Ocio':'#CDD9FA','📱 Servicios':'#D3D1C7','📦 Otros':'#e8e8e8'
+  '🛒 Mercado y carnes':'#B5D4F4',
+  '🧹 Productos hogar':'#9FE1CB',
+  '🔧 Mantenimiento Locativo':'#FAC775',
+  '🧽 Servicio Aseo':'#C0DD97',
+  '🔒 Vigilancia':'#D3D1C7',
+  '❄️ Refri ofrenda':'#CDD9FA',
+  '💼 Gastos AFV':'#F5C4B3',
+  '👜 Gastos Yas':'#F4C0D1',
+  '💊 Farmacia, médico, odontología':'#FCEABB',
+  '📦 Gastos Varios':'#e8e8e8'
 };
 
 function fmt(n){
   return new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n||0);
 }
-
 function toast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2200);
 }
-
 function setSyncDot(online){
-  const d=document.getElementById('sync-dot');
-  d.className='sync-dot '+(online?'online':'offline');
+  document.getElementById('sync-dot').className='sync-dot '+(online?'online':'offline');
 }
 
-window.addEventListener('online', ()=>setSyncDot(true));
-window.addEventListener('offline', ()=>setSyncDot(false));
+window.addEventListener('online',()=>setSyncDot(true));
+window.addEventListener('offline',()=>setSyncDot(false));
 setSyncDot(navigator.onLine);
 
-// Listeners en tiempo real
-onValue(ref(db,'periods'), snap=>{
-  periods = snap.val()||{};
-  setSyncDot(true);
-  renderAll();
-});
-onValue(ref(db,'expenses'), snap=>{
-  expenses = snap.val()||{};
-  renderAll();
-});
-onValue(ref(db,'meta'), snap=>{
-  const meta = snap.val()||{};
-  activePeriod = meta.activePeriod||null;
-  renderAll();
-});
+onValue(ref(db,'periods'),snap=>{ periods=snap.val()||{}; setSyncDot(true); renderAll(); });
+onValue(ref(db,'expenses'),snap=>{ expenses=snap.val()||{}; renderAll(); });
+onValue(ref(db,'meta'),snap=>{ const m=snap.val()||{}; activePeriod=m.activePeriod||null; renderAll(); });
 
 function renderAll(){
   renderDashboard();
@@ -274,19 +298,24 @@ function renderAll(){
   populatePeriodSelects();
 }
 
-// ---- TABS ----
 window.showTab = function(name){
   ['dashboard','add','list','periods'].forEach(t=>{
-    document.getElementById('tab-'+t).classList.toggle('active', t===name);
-    document.getElementById('tab-btn-'+t).classList.toggle('active', t===name);
+    document.getElementById('tab-'+t).classList.toggle('active',t===name);
+    document.getElementById('tab-btn-'+t).classList.toggle('active',t===name);
   });
 };
 
-// ---- USUARIO ----
 window.selectUser = function(u){
   addUser=u;
   document.getElementById('u1-btn').classList.toggle('active',u==='U1');
   document.getElementById('u2-btn').classList.toggle('active',u==='U2');
+};
+
+window.selectType = function(type){
+  addType=type;
+  document.getElementById('type-gasto').classList.toggle('active',type==='gasto');
+  document.getElementById('type-ingreso').classList.toggle('active',type==='ingreso');
+  document.getElementById('cat-field').style.display=type==='gasto'?'block':'none';
 };
 
 // ---- PERIODOS ----
@@ -294,52 +323,61 @@ window.createPeriod = function(){
   const name=document.getElementById('period-name').value.trim();
   const start=document.getElementById('period-start').value;
   const end=document.getElementById('period-end').value;
+  const saldo=parseFloat(document.getElementById('period-saldo').value)||0;
   if(!name||!start){toast('Nombre y fecha inicio son obligatorios');return;}
-  push(ref(db,'periods'),{name,start,end:end||'',createdAt:Date.now()})
+  push(ref(db,'periods'),{name,start,end:end||'',saldoInicial:saldo,createdAt:Date.now()})
     .then(()=>{
       document.getElementById('period-name').value='';
       document.getElementById('period-end').value='';
+      document.getElementById('period-saldo').value='';
       toast('Periodo creado ✓');
     }).catch(()=>toast('Error al guardar'));
 };
 
 window.setActivePeriod = function(id){
-  set(ref(db,'meta'),{activePeriod:id})
-    .then(()=>toast('Periodo activo ✓'))
-    .catch(()=>toast('Error'));
+  set(ref(db,'meta'),{activePeriod:id}).then(()=>toast('Periodo activo ✓')).catch(()=>toast('Error'));
+};
+
+window.updateSaldoInicial = function(id){
+  const val=parseFloat(document.getElementById('saldo-input-'+id).value)||0;
+  const p=periods[id];
+  set(ref(db,'periods/'+id),{...p,saldoInicial:val})
+    .then(()=>toast('Saldo actualizado ✓')).catch(()=>toast('Error'));
 };
 
 window.closePeriod = function(id){
-  const p=periods[id];
-  if(!p) return;
+  const p=periods[id]; if(!p) return;
   set(ref(db,'periods/'+id),{...p,closed:true,closedAt:Date.now()})
-    .then(()=>toast('Periodo cerrado'))
-    .catch(()=>toast('Error'));
+    .then(()=>toast('Periodo cerrado')).catch(()=>toast('Error'));
 };
 
 window.deletePeriod = function(id){
-  if(!confirm('¿Eliminar este periodo? Los gastos asociados quedarán sin periodo.')) return;
-  remove(ref(db,'periods/'+id))
-    .then(()=>toast('Periodo eliminado'))
-    .catch(()=>toast('Error'));
+  if(!confirm('¿Eliminar este periodo?')) return;
+  remove(ref(db,'periods/'+id)).then(()=>toast('Eliminado')).catch(()=>toast('Error'));
 };
 
 function renderPeriods(){
   const el=document.getElementById('periods-list');
   const keys=Object.keys(periods).sort((a,b)=>(periods[b].createdAt||0)-(periods[a].createdAt||0));
-  if(!keys.length){
-    el.innerHTML='<div class="empty"><i class="ti ti-calendar-off"></i>No hay periodos aún</div>';
-    return;
-  }
+  if(!keys.length){el.innerHTML='<div class="empty"><i class="ti ti-calendar-off"></i>No hay periodos aún</div>';return;}
   el.innerHTML=keys.map(id=>{
     const p=periods[id];
-    const cnt=Object.values(expenses).filter(e=>e.period===id).length;
-    const tot=Object.values(expenses).filter(e=>e.period===id).reduce((a,b)=>a+b.amount,0);
+    const expsP=Object.values(expenses).filter(e=>e.period===id);
+    const gastos=expsP.filter(e=>e.type!=='ingreso').reduce((a,b)=>a+b.amount,0);
+    const ingresos=expsP.filter(e=>e.type==='ingreso').reduce((a,b)=>a+b.amount,0);
+    const saldo=(p.saldoInicial||0)+ingresos-gastos;
     const isActive=activePeriod===id;
     const isClosed=p.closed;
     return `<div class="period-card${isActive?' active-period':''}">
       <h3>${p.name}${isActive?'<span class="badge badge-blue">activo</span>':''}${isClosed?'<span class="badge" style="background:#f0f0f0;color:#888">cerrado</span>':''}</h3>
-      <p>${p.start}${p.end?' → '+p.end:''} · ${cnt} gastos · ${fmt(tot)}</p>
+      <p>${p.start}${p.end?' → '+p.end:''} · Saldo: <strong style="color:${saldo>=0?'#1D9E75':'#E24B4A'}">${fmt(saldo)}</strong></p>
+      <div style="margin-top:8px">
+        <div style="font-size:11px;color:#888;margin-bottom:4px">Saldo inicial</div>
+        <div class="saldo-edit">
+          <input type="number" id="saldo-input-${id}" value="${p.saldoInicial||0}" min="0" inputmode="numeric">
+          <button onclick="updateSaldoInicial('${id}')">Guardar</button>
+        </div>
+      </div>
       <div class="period-actions">
         ${!isActive?`<button class="btn-act" onclick="setActivePeriod('${id}')">Activar</button>`:'<button disabled style="opacity:.4;cursor:default">Activo</button>'}
         ${!isClosed?`<button onclick="closePeriod('${id}')">Cerrar</button>`:''}
@@ -349,27 +387,25 @@ function renderPeriods(){
   }).join('');
 }
 
-// ---- GASTOS ----
+// ---- MOVIMIENTOS ----
 window.addExpense = function(){
   const period=document.getElementById('exp-period').value;
-  const cat=document.getElementById('exp-cat').value;
+  const cat=addType==='ingreso'?'💰 Ingreso':document.getElementById('exp-cat').value;
   const desc=document.getElementById('exp-desc').value.trim();
   const amount=parseFloat(document.getElementById('exp-amount').value);
   const date=document.getElementById('exp-date').value;
   if(!period){toast('Selecciona un periodo');return;}
   if(!desc||!amount||amount<=0||!date){toast('Completa todos los campos');return;}
-  push(ref(db,'expenses'),{period,user:addUser,cat,desc,amount,date,createdAt:Date.now()})
+  push(ref(db,'expenses'),{period,user:addUser,type:addType,cat,desc,amount,date,createdAt:Date.now()})
     .then(()=>{
       document.getElementById('exp-desc').value='';
       document.getElementById('exp-amount').value='';
-      toast('Gasto registrado ✓');
+      toast(addType==='ingreso'?'Ingreso registrado ✓':'Gasto registrado ✓');
     }).catch(()=>toast('Error al guardar'));
 };
 
 window.deleteExpense = function(id){
-  remove(ref(db,'expenses/'+id))
-    .then(()=>toast('Eliminado'))
-    .catch(()=>toast('Error'));
+  remove(ref(db,'expenses/'+id)).then(()=>toast('Eliminado')).catch(()=>toast('Error'));
 };
 
 function renderList(){
@@ -381,62 +417,76 @@ function renderList(){
     if(fu&&e.user!==fu) return false;
     return true;
   }).sort((a,b)=>b[1].date.localeCompare(a[1].date)||(b[1].createdAt||0)-(a[1].createdAt||0));
-  if(!exps.length){
-    el.innerHTML='<div class="empty"><i class="ti ti-receipt-off"></i>Sin gastos con estos filtros</div>';
-    return;
-  }
-  el.innerHTML='<div class="card">'+exps.map(([id,e])=>`
-    <div class="expense-item">
-      <div class="cat-icon" style="background:${COLORS[e.cat]||'#e8e8e8'}">${e.cat.split(' ')[0]}</div>
+  if(!exps.length){el.innerHTML='<div class="empty"><i class="ti ti-receipt-off"></i>Sin movimientos con estos filtros</div>';return;}
+  el.innerHTML='<div class="card">'+exps.map(([id,e])=>{
+    const isIngreso=e.type==='ingreso';
+    const icon=isIngreso?'💰':(e.cat||'📦').split(' ')[0];
+    const bg=isIngreso?'#e6f7f0':(COLORS[e.cat]||'#e8e8e8');
+    return `<div class="expense-item">
+      <div class="cat-icon" style="background:${bg}">${icon}</div>
       <div class="exp-info">
-        <div class="exp-desc">${e.desc}</div>
+        <div class="exp-desc">${e.desc}${isIngreso?'<span class="type-badge ingreso">ingreso</span>':''}</div>
         <div class="exp-meta">${e.date} · ${periods[e.period]?.name||'—'}</div>
       </div>
       <div class="exp-right">
-        <div class="exp-amount">${fmt(e.amount)}</div>
+        <div class="exp-amount ${isIngreso?'ingreso':'gasto'}">${isIngreso?'+':'−'}${fmt(e.amount)}</div>
         <div class="exp-user">${e.user==='U1'?'Aldemar':'Yasmin'}</div>
       </div>
       <button class="del-btn" onclick="deleteExpense('${id}')" aria-label="Eliminar"><i class="ti ti-trash"></i></button>
-    </div>`).join('')+'</div>';
+    </div>`;
+  }).join('')+'</div>';
 }
 
 // ---- DASHBOARD ----
 function renderDashboard(){
   const p=activePeriod?periods[activePeriod]:null;
-  document.getElementById('header-sub').textContent = p
-    ? `${p.name}${p.start?' · desde '+p.start:''}`
-    : 'Sin periodo activo';
+  document.getElementById('header-sub').textContent=p?`${p.name}${p.start?' · desde '+p.start:''}`:'Sin periodo activo';
 
   const pkeys=Object.keys(periods);
   const psel=document.getElementById('period-selector-dash');
   if(pkeys.length>0){
     const sorted=pkeys.sort((a,b)=>(periods[b].createdAt||0)-(periods[a].createdAt||0));
     psel.innerHTML=`<select style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:12px;background:#fff;color:#1a1a1a" onchange="setActivePeriod(this.value)">`
-      +sorted.map(id=>`<option value="${id}"${id===activePeriod?' selected':''}>${periods[id].name}</option>`).join('')
-      +`</select>`;
+      +sorted.map(id=>`<option value="${id}"${id===activePeriod?' selected':''}>${periods[id].name}</option>`).join('')+'</select>';
   } else {
     psel.innerHTML='<div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 12px;font-size:13px;color:#856404;margin-bottom:12px">Crea un periodo en la pestaña <strong>Periodos</strong> para comenzar.</div>';
   }
 
   const exps=Object.values(expenses).filter(e=>e.period===activePeriod);
-  const total=exps.reduce((a,b)=>a+b.amount,0);
-  const u1=exps.filter(e=>e.user==='U1').reduce((a,b)=>a+b.amount,0);
-  const u2=exps.filter(e=>e.user==='U2').reduce((a,b)=>a+b.amount,0);
+  const gastos=exps.filter(e=>e.type!=='ingreso').reduce((a,b)=>a+b.amount,0);
+  const ingresos=exps.filter(e=>e.type==='ingreso').reduce((a,b)=>a+b.amount,0);
+  const saldoInicial=p?.saldoInicial||0;
+  const saldoActual=saldoInicial+ingresos-gastos;
+  const u1=exps.filter(e=>e.user==='U1'&&e.type!=='ingreso').reduce((a,b)=>a+b.amount,0);
+  const u2=exps.filter(e=>e.user==='U2'&&e.type!=='ingreso').reduce((a,b)=>a+b.amount,0);
+
+  // Tarjeta de saldo
+  document.getElementById('saldo-card-dash').innerHTML=`
+    <div class="saldo-card">
+      <div class="saldo-label">Saldo disponible</div>
+      <div class="saldo-value${saldoActual<0?' negative':''}">${fmt(saldoActual)}</div>
+      <div class="saldo-row">
+        <div class="saldo-mini"><div class="saldo-mini-label">Saldo inicial</div><div class="saldo-mini-value">${fmt(saldoInicial)}</div></div>
+        <div class="saldo-mini"><div class="saldo-mini-label">+ Ingresos</div><div class="saldo-mini-value">${fmt(ingresos)}</div></div>
+        <div class="saldo-mini"><div class="saldo-mini-label">− Gastos</div><div class="saldo-mini-value">${fmt(gastos)}</div></div>
+      </div>
+    </div>`;
 
   document.getElementById('stats-grid').innerHTML=`
-    <div class="stat"><div class="stat-label">Total periodo</div><div class="stat-value red">${fmt(total)}</div></div>
-    <div class="stat"><div class="stat-label">N° gastos</div><div class="stat-value blue">${exps.length}</div></div>
+    <div class="stat"><div class="stat-label">Total gastos</div><div class="stat-value red">${fmt(gastos)}</div></div>
+    <div class="stat"><div class="stat-label">N° movimientos</div><div class="stat-value blue">${exps.length}</div></div>
     <div class="stat"><div class="stat-label">Aldemar</div><div class="stat-value red">${fmt(u1)}</div></div>
     <div class="stat"><div class="stat-label">Yasmin</div><div class="stat-value red">${fmt(u2)}</div></div>`;
 
+  // Categorías (solo gastos)
   const cats={};
-  exps.forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amount});
+  exps.filter(e=>e.type!=='ingreso').forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amount});
   const catEl=document.getElementById('cat-summary');
   if(!Object.keys(cats).length){
-    catEl.innerHTML='<div class="empty" style="padding:1rem;color:#bbb;font-size:12px">Sin gastos en este periodo</div>';
+    catEl.innerHTML='<div style="padding:1rem;text-align:center;color:#bbb;font-size:12px">Sin gastos aún</div>';
   } else {
     catEl.innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>{
-      const pct=total>0?Math.round((amt/total)*100):0;
+      const pct=gastos>0?Math.round((amt/gastos)*100):0;
       return `<div class="bar-row">
         <div class="bar-label"><span>${cat}</span><span style="font-weight:600">${fmt(amt)} <span style="color:#aaa;font-weight:400">${pct}%</span></span></div>
         <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${COLORS[cat]||'#ccc'}"></div></div>
@@ -444,14 +494,20 @@ function renderDashboard(){
     }).join('');
   }
 
+  // Recientes
   const recent=exps.slice().sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt||0)-(a.createdAt||0)).slice(0,5);
   document.getElementById('recent-list').innerHTML=recent.length
-    ? recent.map(e=>`<div class="expense-item">
-        <div class="cat-icon" style="background:${COLORS[e.cat]||'#e8e8e8'}">${e.cat.split(' ')[0]}</div>
-        <div class="exp-info"><div class="exp-desc">${e.desc}</div><div class="exp-meta">${e.date} · ${e.user==='U1'?'U1':'U2'}</div></div>
-        <div class="exp-right"><div class="exp-amount">${fmt(e.amount)}</div></div>
-      </div>`).join('')
-    : '<div style="padding:1rem;text-align:center;color:#bbb;font-size:12px">Sin gastos aún</div>';
+    ? recent.map(e=>{
+        const isIngreso=e.type==='ingreso';
+        const icon=isIngreso?'💰':(e.cat||'📦').split(' ')[0];
+        const bg=isIngreso?'#e6f7f0':(COLORS[e.cat]||'#e8e8e8');
+        return `<div class="expense-item">
+          <div class="cat-icon" style="background:${bg}">${icon}</div>
+          <div class="exp-info"><div class="exp-desc">${e.desc}</div><div class="exp-meta">${e.date} · ${e.user==='U1'?'Aldemar':'Yasmin'}</div></div>
+          <div class="exp-right"><div class="exp-amount ${isIngreso?'ingreso':'gasto'}">${isIngreso?'+':'−'}${fmt(e.amount)}</div></div>
+        </div>`;
+      }).join('')
+    : '<div style="padding:1rem;text-align:center;color:#bbb;font-size:12px">Sin movimientos aún</div>';
 }
 
 function populatePeriodSelects(){
@@ -466,12 +522,13 @@ function populatePeriodSelects(){
 // ---- EXPORT CSV ----
 window.exportCSV = function(){
   const exps=Object.values(expenses);
-  if(!exps.length){toast('No hay gastos para exportar');return;}
-  const rows=[['Periodo','Inicio','Fin','Usuario','Fecha','Categoría','Descripción','Monto']];
+  if(!exps.length){toast('No hay movimientos para exportar');return;}
+  const rows=[['Periodo','Inicio','Fin','Saldo Inicial','Tipo','Usuario','Fecha','Categoría','Descripción','Monto']];
   exps.sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
     const p=periods[e.period]||{};
     rows.push([
-      p.name||'?', p.start||'', p.end||'',
+      p.name||'?', p.start||'', p.end||'', p.saldoInicial||0,
+      e.type==='ingreso'?'Ingreso':'Gasto',
       e.user==='U1'?'Aldemar':'Yasmin',
       e.date,
       e.cat.replace(/\p{Emoji}/gu,'').trim(),
@@ -487,7 +544,6 @@ window.exportCSV = function(){
   toast('CSV descargado ✓');
 };
 
-// Fechas por defecto
 const today=new Date().toISOString().split('T')[0];
 document.getElementById('exp-date').value=today;
 document.getElementById('period-start').value=today;
