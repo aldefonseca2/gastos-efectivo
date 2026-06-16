@@ -500,6 +500,7 @@ function renderList(){
         <div class="exp-amount ${isIngreso?'ingreso':'gasto'}">${isIngreso?'+':'−'}${fmt(e.amount)}</div>
         <div class="exp-user">${e.user==='U1'?'Aldemar':'Yasmin'}</div>
       </div>
+      <button class="edit-btn" onclick="openEdit('${id}')" aria-label="Editar"><i class="ti ti-pencil"></i></button>
       <button class="del-btn" onclick="deleteExpense('${id}')" aria-label="Eliminar"><i class="ti ti-trash"></i></button>
     </div>`;
   }).join('')+'</div>';
