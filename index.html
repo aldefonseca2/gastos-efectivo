@@ -93,6 +93,16 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
 .type-badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:600;margin-left:4px}
 .type-badge.ingreso{background:#e6f7f0;color:#1D9E75}
 .type-badge.saldo{background:#E6F1FB;color:#185FA5}
+.edit-btn{background:none;border:none;cursor:pointer;color:#bbb;padding:4px;font-size:16px}
+.edit-btn:active{color:#378ADD}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 32px;width:100%;max-width:420px;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:#aaa;padding:0 4px}
+.modal .btn-danger{width:100%;padding:10px;background:#fff;color:#E24B4A;border:1px solid #f0c0c0;border-radius:9px;font-size:14px;font-weight:500;cursor:pointer;margin-top:8px}
 </style>
 </head>
 <body>
@@ -120,6 +130,64 @@ body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a1a;min-heigh
   </div>
 
   <div id="toast" class="toast"></div>
+
+  <!-- MODAL EDICION -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="modal-title">
+        <span>Editar movimiento</span>
+        <button class="modal-close" onclick="closeModalDirect()">&#x2715;</button>
+      </div>
+      <input type="hidden" id="edit-id">
+      <div class="field">
+        <label>Tipo</label>
+        <div class="type-toggle">
+          <button class="t-btn gasto active" id="edit-type-gasto" onclick="editSelectType('gasto')">&#x2191; Gasto</button>
+          <button class="t-btn ingreso" id="edit-type-ingreso" onclick="editSelectType('ingreso')">&#x2193; Ingreso</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Usuario</label>
+        <div class="user-toggle">
+          <button class="u-btn active" id="edit-u1-btn" onclick="editSelectUser('U1')">&#x1F464; Aldemar</button>
+          <button class="u-btn" id="edit-u2-btn" onclick="editSelectUser('U2')">&#x1F464; Yasmin</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Periodo</label>
+        <select id="edit-period"></select>
+      </div>
+      <div id="edit-cat-field" class="field">
+        <label>Categor&#xED;a</label>
+        <select id="edit-cat">
+          <option>&#x1F6D2; Mercado y carnes</option>
+          <option>&#x1F9F9; Productos hogar</option>
+          <option>&#x1F527; Mantenimiento Locativo</option>
+          <option>&#x1F9FD; Servicio Aseo</option>
+          <option>&#x1F512; Vigilancia</option>
+          <option>&#x2744;&#xFE0F; Refri ofrenda</option>
+          <option>&#x1F4BC; Gastos AFV</option>
+          <option>&#x1F45C; Gastos Yas</option>
+          <option>&#x1F48A; Farmacia, m&#xE9;dico, odontolog&#xED;a</option>
+          <option>&#x1F4E6; Gastos Varios</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descripci&#xF3;n</label>
+        <input type="text" id="edit-desc" placeholder="Descripci&#xF3;n">
+      </div>
+      <div class="field">
+        <label>Monto ($)</label>
+        <input type="number" id="edit-amount" placeholder="0" min="0" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="edit-date">
+      </div>
+      <button class="btn-primary" onclick="saveEdit()">Guardar cambios</button>
+      <button class="btn-danger" onclick="deleteFromModal()" style="width:100%;padding:10px;background:#fff;color:#E24B4A;border:1px solid #f0c0c0;border-radius:9px;font-size:14px;font-weight:500;cursor:pointer;margin-top:8px">Eliminar movimiento</button>
+    </div>
+  </div>
 
   <!-- DASHBOARD -->
   <div class="content section-tab active" id="tab-dashboard">
@@ -518,6 +586,76 @@ function populatePeriodSelects(){
   const fp=document.getElementById('filter-period');
   if(fp) fp.innerHTML='<option value="">Todos los periodos</option>'+opts;
 }
+
+// ---- MODAL EDICION ----
+let editType = 'gasto';
+let editUser = 'U1';
+
+window.openEdit = function(id){
+  const e = expenses[id];
+  if(!e) return;
+  document.getElementById('edit-id').value = id;
+  editType = e.type||'gasto';
+  editUser = e.user||'U1';
+  // tipo
+  document.getElementById('edit-type-gasto').classList.toggle('active', editType==='gasto');
+  document.getElementById('edit-type-ingreso').classList.toggle('active', editType==='ingreso');
+  document.getElementById('edit-cat-field').style.display = editType==='ingreso'?'none':'block';
+  // usuario
+  document.getElementById('edit-u1-btn').classList.toggle('active', editUser==='U1');
+  document.getElementById('edit-u2-btn').classList.toggle('active', editUser==='U2');
+  // periodo
+  const keys=Object.keys(periods).sort((a,b)=>(periods[b].createdAt||0)-(periods[a].createdAt||0));
+  document.getElementById('edit-period').innerHTML=keys.map(pid=>`<option value="${pid}"${pid===e.period?' selected':''}>${periods[pid].name}</option>`).join('');
+  // categoria
+  if(editType!=='ingreso') document.getElementById('edit-cat').value = e.cat||'';
+  // campos
+  document.getElementById('edit-desc').value = e.desc||'';
+  document.getElementById('edit-amount').value = e.amount||'';
+  document.getElementById('edit-date').value = e.date||'';
+  document.getElementById('modal-overlay').classList.add('open');
+};
+
+window.closeModal = function(ev){
+  if(ev.target===document.getElementById('modal-overlay')) closeModalDirect();
+};
+window.closeModalDirect = function(){
+  document.getElementById('modal-overlay').classList.remove('open');
+};
+
+window.editSelectType = function(type){
+  editType=type;
+  document.getElementById('edit-type-gasto').classList.toggle('active',type==='gasto');
+  document.getElementById('edit-type-ingreso').classList.toggle('active',type==='ingreso');
+  document.getElementById('edit-cat-field').style.display=type==='ingreso'?'none':'block';
+};
+window.editSelectUser = function(u){
+  editUser=u;
+  document.getElementById('edit-u1-btn').classList.toggle('active',u==='U1');
+  document.getElementById('edit-u2-btn').classList.toggle('active',u==='U2');
+};
+
+window.saveEdit = function(){
+  const id=document.getElementById('edit-id').value;
+  const period=document.getElementById('edit-period').value;
+  const cat=editType==='ingreso'?'💰 Ingreso':document.getElementById('edit-cat').value;
+  const desc=document.getElementById('edit-desc').value.trim();
+  const amount=parseFloat(document.getElementById('edit-amount').value);
+  const date=document.getElementById('edit-date').value;
+  if(!desc||!amount||amount<=0||!date){toast('Completa todos los campos');return;}
+  const orig=expenses[id]||{};
+  set(ref(db,'expenses/'+id),{...orig,period,user:editUser,type:editType,cat,desc,amount,date})
+    .then(()=>{ closeModalDirect(); toast('Movimiento actualizado ✓'); })
+    .catch(()=>toast('Error al guardar'));
+};
+
+window.deleteFromModal = function(){
+  const id=document.getElementById('edit-id').value;
+  if(!confirm('¿Eliminar este movimiento?')) return;
+  remove(ref(db,'expenses/'+id))
+    .then(()=>{ closeModalDirect(); toast('Eliminado'); })
+    .catch(()=>toast('Error'));
+};
 
 // ---- EXPORT CSV ----
 window.exportCSV = function(){
